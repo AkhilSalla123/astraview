@@ -1,0 +1,25 @@
+# secrets
+.git_bin/
+.env
+*.env.local
+application-local.properties
+
+# node
+node_modules/
+dist/
+
+# java
+target/
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+
+# python
+__pycache__/
+.venv/
+venv/
+.pytest_cache/
+
+.DS_Store
