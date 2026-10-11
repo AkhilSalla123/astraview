@@ -7,6 +7,7 @@ import AntennaPanel from './components/AntennaPanel'
 import PassTable from './components/PassTable'
 import SkyPlot from './components/SkyPlot'
 import HistoryPanel from './components/HistoryPanel'
+import AntennaBuilder from './components/AntennaBuilder'
 import { fmt, fmtDoppler } from './utils'
 
 export default function App() {
@@ -151,7 +152,12 @@ export default function App() {
         <section className="center">
           <GlobeView sat={status} orbit={orbit} station={station} focusKey={noradId} />
           <div className="tabs" role="tablist">
-            {[['passes', 'Passes'], ['sky', 'Sky plot'], ['history', 'History']].map(([k, label]) => (
+            {[
+              ['passes', 'Passes'],
+              ['sky', 'Sky plot'],
+              ['builder', 'Antenna builder'],
+              ['history', 'History'],
+            ].map(([k, label]) => (
               <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{label}</button>
             ))}
           </div>
@@ -166,6 +172,7 @@ export default function App() {
                 </div>
               </div>
             )}
+            {tab === 'builder' && <AntennaBuilder sat={status} freq={freq} />}
             {tab === 'history' && <HistoryPanel noradId={noradId} active={tab === 'history'} />}
           </div>
         </section>
