@@ -1,14 +1,23 @@
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
 
-async function request(path, options = {}) {
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+async function request(path, options = {}, retries = 2) {
   let res
-  try {
-    res = await fetch(`${API_URL}${path}`, {
-      headers: { 'Content-Type': 'application/json' },
-      ...options,
-    })
-  } catch {
-    throw new Error(`Cannot reach the backend at ${API_URL}. Is Spring Boot running?`)
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      res = await fetch(`${API_URL}${path}`, {
+        headers: { 'Content-Type': 'application/json' },
+        ...options,
+      })
+      break
+    } catch {
+      if (attempt < retries) {
+        await sleep(1500 * (attempt + 1))
+        continue
+      }
+      throw new Error(`Connecting to backend at ${API_URL}... Backend may be waking up from free-tier sleep.`)
+    }
   }
   if (!res.ok) {
     let message = `Request failed (${res.status})`

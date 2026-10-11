@@ -27,17 +27,29 @@ export default function App() {
 
   const station = stations.find((s) => s.id === stationId) || null
 
-  // initial load
-  useEffect(() => {
-    Promise.all([api.listSatellites(), api.listStations()])
+  const loadInitial = useCallback(() => {
+    return Promise.all([api.listSatellites(), api.listStations()])
       .then(([sats, sts]) => {
         setSatellites(sats)
         setStations(sts)
-        if (sats.length) setNoradId(sats[0].noradId)
-        if (sts.length) setStationId(sts[0].id)
+        if (sats.length) setNoradId((prev) => prev || sats[0].noradId)
+        if (sts.length) setStationId((prev) => prev || sts[0].id)
+        setError('')
       })
       .catch((e) => setError(e.message))
   }, [])
+
+  // initial load
+  useEffect(() => {
+    loadInitial()
+  }, [loadInitial])
+
+  // auto-retry if initial load failed (e.g. while Render wakes from sleep)
+  useEffect(() => {
+    if (satellites.length > 0 && stations.length > 0) return
+    const id = setInterval(loadInitial, 5000)
+    return () => clearInterval(id)
+  }, [satellites.length, stations.length, loadInitial])
 
   // live antenna status
   useEffect(() => {
@@ -139,7 +151,18 @@ export default function App() {
         )}
       </header>
 
-      {error && <div className="banner" role="alert">{error}</div>}
+      {error && (
+        <div className="banner" role="alert" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+          <span>{error}</span>
+          <button
+            type="button"
+            onClick={() => { setError(''); loadInitial() }}
+            style={{ background: '#38bdf8', color: '#0b1120', border: 'none', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}
+          >
+            Retry Now
+          </button>
+        </div>
+      )}
 
       <main className="layout">
         <aside className="side">
