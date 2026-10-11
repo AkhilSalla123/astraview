@@ -21,7 +21,8 @@ export default function App() {
   const [passes, setPasses] = useState([])
   const [passesLoading, setPassesLoading] = useState(false)
   const [selectedPass, setSelectedPass] = useState(0)
-  const [tab, setTab] = useState('passes')
+  const [tab, setTab] = useState('globe')
+  const [globeSubTab, setGlobeSubTab] = useState('passes')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
@@ -164,46 +165,128 @@ export default function App() {
         </div>
       )}
 
-      <main className="layout">
-        <aside className="side">
-          <SatellitePanel satellites={satellites} noradId={noradId} onSelect={setNoradId}
-                          onAdd={addSatellite} onRemove={removeSatellite} onRefresh={refreshTles} busy={busy} />
-          <StationPanel stations={stations} stationId={stationId} onSelect={setStationId}
-                        onSave={saveStation} onDelete={removeStation} freq={freq} onFreq={setFreq} />
-        </aside>
+      <nav className="main-nav" role="tablist">
+        {[
+          ['globe', '🌐 3D Orbit Tracker'],
+          ['builder', '🛠️ DIY Antenna Builder'],
+          ['passes', '🛰️ Passes & Radar'],
+          ['station', '📡 Ground Station & Rotator'],
+          ['history', '📊 Telemetry History'],
+        ].map(([k, label]) => (
+          <button
+            key={k}
+            type="button"
+            role="tab"
+            aria-selected={tab === k}
+            className={`nav-tab ${tab === k ? 'active' : ''}`}
+            onClick={() => setTab(k)}
+          >
+            {label}
+          </button>
+        ))}
+      </nav>
 
-        <section className="center">
-          <GlobeView sat={status} orbit={orbit} station={station} focusKey={noradId} />
-          <div className="tabs" role="tablist">
-            {[
-              ['passes', 'Passes'],
-              ['sky', 'Sky plot'],
-              ['builder', 'Antenna builder'],
-              ['history', 'History'],
-            ].map(([k, label]) => (
-              <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{label}</button>
-            ))}
-          </div>
-          <div className="tabbody">
-            {tab === 'passes' && <PassTable passes={passes} selected={selectedPass} onSelect={(i) => { setSelectedPass(i); setTab('sky') }} loading={passesLoading} />}
-            {tab === 'sky' && (
-              <div className="skywrap">
+      {tab === 'globe' && (
+        <main className="layout">
+          <aside className="side">
+            <SatellitePanel satellites={satellites} noradId={noradId} onSelect={setNoradId}
+                            onAdd={addSatellite} onRemove={removeSatellite} onRefresh={refreshTles} busy={busy} />
+            <StationPanel stations={stations} stationId={stationId} onSelect={setStationId}
+                          onSave={saveStation} onDelete={removeStation} freq={freq} onFreq={setFreq} />
+          </aside>
+
+          <section className="center">
+            <GlobeView sat={status} orbit={orbit} station={station} focusKey={noradId} />
+            <div className="tabs" role="tablist">
+              {[
+                ['passes', 'Passes'],
+                ['sky', 'Sky plot'],
+              ].map(([k, label]) => (
+                <button key={k} role="tab" aria-selected={globeSubTab === k} className={globeSubTab === k ? 'on' : ''} onClick={() => setGlobeSubTab(k)}>{label}</button>
+              ))}
+            </div>
+            <div className="tabbody">
+              {globeSubTab === 'passes' && <PassTable passes={passes} selected={selectedPass} onSelect={(i) => { setSelectedPass(i); setGlobeSubTab('sky') }} loading={passesLoading} />}
+              {globeSubTab === 'sky' && (
+                <div className="skywrap">
+                  <SkyPlot pass={pass} live={status} />
+                  <div className="skylegend">
+                    <p><i className="dot aos" /> Rise <i className="dot los" /> Set <i className="dot sat" /> Commanded <i className="dot dish" /> Antenna</p>
+                    <p className="meta">{pass ? 'Showing the selected pass. Pick another one in the Passes tab.' : 'No pass to show yet.'}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+
+          <aside className="side">
+            <AntennaPanel status={status} />
+          </aside>
+        </main>
+      )}
+
+      {tab === 'builder' && (
+        <main className="layout-two-col">
+          <aside className="side">
+            <SatellitePanel satellites={satellites} noradId={noradId} onSelect={setNoradId}
+                            onAdd={addSatellite} onRemove={removeSatellite} onRefresh={refreshTles} busy={busy} />
+          </aside>
+          <section className="main-panel">
+            <AntennaBuilder sat={status} freq={freq} />
+          </section>
+        </main>
+      )}
+
+      {tab === 'passes' && (
+        <main className="layout-two-col">
+          <aside className="side">
+            <SatellitePanel satellites={satellites} noradId={noradId} onSelect={setNoradId}
+                            onAdd={addSatellite} onRemove={removeSatellite} onRefresh={refreshTles} busy={busy} />
+            <StationPanel stations={stations} stationId={stationId} onSelect={setStationId}
+                          onSave={saveStation} onDelete={removeStation} freq={freq} onFreq={setFreq} />
+          </aside>
+          <section className="main-panel">
+            <div className="panelhead">
+              <h2>Pass Predictions & Sky Plot Radar</h2>
+              <span className="meta">{station ? `${station.name} (${station.latitude.toFixed(2)}°, ${station.longitude.toFixed(2)}°)` : 'No station selected'}</span>
+            </div>
+            <div className="passes-grid">
+              <PassTable passes={passes} selected={selectedPass} onSelect={setSelectedPass} loading={passesLoading} />
+              <div className="skywrap" style={{ flexDirection: 'column', alignItems: 'center' }}>
                 <SkyPlot pass={pass} live={status} />
                 <div className="skylegend">
                   <p><i className="dot aos" /> Rise <i className="dot los" /> Set <i className="dot sat" /> Commanded <i className="dot dish" /> Antenna</p>
-                  <p className="meta">{pass ? 'Showing the selected pass. Pick another one in the Passes tab.' : 'No pass to show yet.'}</p>
+                  <p className="meta">{pass ? 'Showing selected pass trajectory.' : 'No pass selected.'}</p>
                 </div>
               </div>
-            )}
-            {tab === 'builder' && <AntennaBuilder sat={status} freq={freq} />}
-            {tab === 'history' && <HistoryPanel noradId={noradId} active={tab === 'history'} />}
-          </div>
-        </section>
+            </div>
+          </section>
+        </main>
+      )}
 
-        <aside className="side">
-          <AntennaPanel status={status} />
-        </aside>
-      </main>
+      {tab === 'station' && (
+        <main className="layout-two-col">
+          <aside className="side">
+            <StationPanel stations={stations} stationId={stationId} onSelect={setStationId}
+                          onSave={saveStation} onDelete={removeStation} freq={freq} onFreq={setFreq} />
+          </aside>
+          <section className="main-panel">
+            <AntennaPanel status={status} />
+          </section>
+        </main>
+      )}
+
+      {tab === 'history' && (
+        <main className="layout-two-col">
+          <aside className="side">
+            <SatellitePanel satellites={satellites} noradId={noradId} onSelect={setNoradId}
+                            onAdd={addSatellite} onRemove={removeSatellite} onRefresh={refreshTles} busy={busy} />
+          </aside>
+          <section className="main-panel">
+            <HistoryPanel noradId={noradId} active={tab === 'history'} />
+          </section>
+        </main>
+      )}
     </div>
   )
 }
