@@ -36,6 +36,3 @@ services:
     dockerfilePath: ./astraview-frontend/Dockerfile
     plan: free
     healthCheckPath: /health
-    envVars:
-      - key: BACKEND_URL
-        value: "http://astraview-backend:8080"
