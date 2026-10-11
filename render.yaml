@@ -20,10 +20,7 @@ services:
       - key: MONGODB_URI
         sync: false
       - key: ORBIT_SERVICE_URL
-        fromService:
-          type: web
-          name: astraview-orbit-service
-          property: host
+        value: "http://astraview-orbit-service:8000"
       - key: CORS_ORIGINS
         value: "*"
       - key: N2YO_API_KEY
@@ -37,3 +34,6 @@ services:
     dockerfilePath: ./astraview/astraview-frontend/Dockerfile
     plan: free
     healthCheckPath: /health
+    envVars:
+      - key: BACKEND_URL
+        value: "http://astraview-backend:8080"
