@@ -7,12 +7,60 @@ export default function StationPanel({ stations, stationId, onSelect, onSave, on
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState(BLANK)
   const [freqText, setFreqText] = useState(String(freq))
+  const [locating, setLocating] = useState(false)
 
   useEffect(() => setFreqText(String(freq)), [freq])
 
   const startNew = () => { setForm(BLANK); setEditing('new') }
   const startEdit = () => { setForm({ ...current }); setEditing('edit') }
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value })
+
+  const fillGeolocation = (onSuccess) => {
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by your browser.')
+      return
+    }
+    setLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLocating(false)
+        const lat = parseFloat(pos.coords.latitude.toFixed(4))
+        const lon = parseFloat(pos.coords.longitude.toFixed(4))
+        const alt = Math.round(pos.coords.altitude || 0)
+        onSuccess(lat, lon, alt)
+      },
+      (err) => {
+        setLocating(false)
+        alert('Could not detect location: ' + err.message)
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    )
+  }
+
+  const handleUseLiveLocation = () => {
+    fillGeolocation(async (lat, lon, alt) => {
+      const body = {
+        name: 'My Live Station',
+        latitude: lat,
+        longitude: lon,
+        altitudeM: alt,
+        minElevation: current?.minElevation ?? 5,
+      }
+      await onSave(current ? current.id : null, body)
+    })
+  }
+
+  const handleDetectInForm = () => {
+    fillGeolocation((lat, lon, alt) => {
+      setForm((prev) => ({
+        ...prev,
+        name: prev.name || 'My Live Station',
+        latitude: String(lat),
+        longitude: String(lon),
+        altitudeM: alt,
+      }))
+    })
+  }
 
   const submit = async (e) => {
     e.preventDefault()
@@ -40,6 +88,9 @@ export default function StationPanel({ stations, stationId, onSelect, onSave, on
       </div>
       {editing ? (
         <form className="stack" onSubmit={submit}>
+          <button type="button" className="chip" onClick={handleDetectInForm} disabled={locating} style={{ alignSelf: 'flex-start', marginBottom: '8px' }}>
+            {locating ? '📍 Detecting location...' : '📍 Auto-fill GPS coordinates'}
+          </button>
           <label>Name<input required value={form.name} onChange={set('name')} /></label>
           <div className="two">
             <label>Latitude (°)<input required type="number" step="any" min="-90" max="90" value={form.latitude} onChange={set('latitude')} /></label>
@@ -69,6 +120,9 @@ export default function StationPanel({ stations, stationId, onSelect, onSave, on
           )}
           <div className="toolbar">
             <button className="link" onClick={startEdit} disabled={!current}>Edit</button>
+            <button className="link" onClick={handleUseLiveLocation} disabled={locating} title="Set station coordinates to your current GPS position">
+              {locating ? '📍 Locating...' : '📍 Use My Location'}
+            </button>
             <button className="link danger" onClick={() => current && window.confirm(`Delete ${current.name}?`) && onDelete(current.id)} disabled={!current}>Delete</button>
           </div>
           <label className="stack">Receiver frequency (MHz)
