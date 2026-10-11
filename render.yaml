@@ -22,7 +22,7 @@ services:
       - key: MONGODB_URI
         value: "mongodb+srv://akhilsalla650_db_user:ywe05hTi6wlpAFoe@cluster0.e0fit5p.mongodb.net/astraview?retryWrites=true&w=majority&appName=Cluster0"
       - key: ORBIT_SERVICE_URL
-        value: "http://astraview-orbit-service:8000"
+        value: "https://astraview-orbit-service.onrender.com"
       - key: CORS_ORIGINS
         value: "*"
       - key: N2YO_API_KEY
