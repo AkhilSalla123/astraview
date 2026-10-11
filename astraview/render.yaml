@@ -17,6 +17,8 @@ services:
     plan: free
     healthCheckPath: /api/health
     envVars:
+      - key: PORT
+        value: "8080"
       - key: MONGODB_URI
         value: "mongodb+srv://akhilsalla650_db_user:ywe05hTi6wlpAFoe@cluster0.e0fit5p.mongodb.net/astraview?retryWrites=true&w=majority&appName=Cluster0"
       - key: ORBIT_SERVICE_URL
