@@ -11,6 +11,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
+import java.time.Duration;
 import java.util.Map;
 
 /** Thin client for the Python SGP4 orbit service. */
@@ -18,11 +19,20 @@ import java.util.Map;
 public class OrbitClient {
 
     private final RestClient client;
+    private final String resolvedUrl;
 
-    public OrbitClient(@Value("${orbit.service.url}") String baseUrl) {
+    public OrbitClient(@Value("${orbit.service.url:https://astraview-orbit-service.onrender.com}") String baseUrl) {
+        if (baseUrl == null || baseUrl.isBlank() || baseUrl.contains("localhost") || baseUrl.contains(":8000")) {
+            baseUrl = "https://astraview-orbit-service.onrender.com";
+        }
+        this.resolvedUrl = baseUrl;
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(Duration.ofSeconds(10));
+        factory.setReadTimeout(Duration.ofSeconds(15));
+
         this.client = RestClient.builder()
                 .baseUrl(baseUrl)
-                .requestFactory(new SimpleClientHttpRequestFactory())
+                .requestFactory(factory)
                 .build();
     }
 
@@ -39,7 +49,7 @@ public class OrbitClient {
                     "Orbit service rejected the request: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
             throw new ApiException(HttpStatus.BAD_GATEWAY,
-                    "Orbit service is not reachable. Start it with: uvicorn app.main:app --port 8000");
+                    "Orbit service error (" + resolvedUrl + "): " + e.getMessage());
         }
     }
 }
