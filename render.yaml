@@ -18,13 +18,13 @@ services:
     healthCheckPath: /api/health
     envVars:
       - key: MONGODB_URI
-        sync: false
+        value: "mongodb+srv://akhilsalla650_db_user:ywe05hTi6wlpAFoe@cluster0.e0fit5p.mongodb.net/astraview?retryWrites=true&w=majority&appName=Cluster0"
       - key: ORBIT_SERVICE_URL
         value: "http://astraview-orbit-service:8000"
       - key: CORS_ORIGINS
         value: "*"
       - key: N2YO_API_KEY
-        sync: false
+        value: ""
 
   # React + Cesium Frontend
   - type: web

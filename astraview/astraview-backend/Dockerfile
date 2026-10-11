@@ -8,5 +8,6 @@ RUN mvn -q -B package -DskipTests
 FROM eclipse-temurin:17-jre
 WORKDIR /app
 COPY --from=build /app/target/astraview-backend-1.0.0.jar app.jar
+ENV MONGODB_URI="mongodb+srv://akhilsalla650_db_user:ywe05hTi6wlpAFoe@cluster0.e0fit5p.mongodb.net/astraview?retryWrites=true&w=majority&appName=Cluster0"
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
